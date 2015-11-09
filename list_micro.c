@@ -129,7 +129,10 @@ int main(int argc, const char **argv)
   int rc = 0;
   const unsigned char *p, *end;
   struct mc_header_s header;
-
+  const unsigned char *first_mc; /* address of the first mc */
+  const unsigned char *end_mc; /* first byte after the last mc */
+  uint32_t size_sum = 0; /* sum of the total sizes of all mc so far */
+  uint32_t nr_mc = 0;
   if (argc < 2) {
     usage(argv[0]);
     return 1;
@@ -160,6 +163,12 @@ int main(int argc, const char **argv)
 	if (calc_checksum(p, header.total_size) == 0) {
 	  if (header.data_size < header.total_size) {
 	    print_header(p, &header);
+	    if (nr_mc == 0) {
+	      first_mc = p;
+	    }
+	    nr_mc++;
+	    size_sum += header.total_size;
+	    end_mc = p + header.total_size;
 	  }
 	}
       }
@@ -168,6 +177,18 @@ int main(int argc, const char **argv)
   }
 
  end:
+
+  if (nr_mc > 0) {
+    /* print some summary */
+    fprintf(stderr, "\n%u CPU microcodes found", nr_mc);
+    if ((end_mc - first_mc) == size_sum) {
+      /* in a contiguous area */
+      fprintf(stderr, " at file offset 0x%08lx, overall length 0x%x\n", first_mc-faddr, size_sum);
+    } else
+      fprintf(stderr, " at various locations\n");
+  } else
+    fprintf(stderr, "#ERR no CPU microcode found\n");
+
   if (NULL != faddr) {
     munmap(faddr, flen);
   }
