@@ -1,7 +1,5 @@
 /*
    This program dumps the CPU microcodes found in a BIOS file.
-   It currently dumps in reverse order, as the search starts at
-   the end of the file.
 
    copyright (c) 2015 Joerg Albert, jal2@gmx.de
 
